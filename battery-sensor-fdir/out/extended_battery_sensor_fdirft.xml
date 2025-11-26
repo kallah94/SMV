@@ -1,0 +1,24 @@
+<fault-tree>
+    <gate type="OR" name="Top_Level_Event" description="_SYSTEM_FAILURE" probability="4.00e-06" page="Off">
+      <gate type="AND" name="fault_cfg_4" description="" probability="1.00e-06" page="Off">
+        <event name="E5" description="batt1.battery_failure.mode_is_rampdown" probability="1.00e-03"/>
+        <event name="E4" description="batt2.battery_failure.mode_is_rampdown" probability="1.00e-03"/>
+      </gate>
+      <gate type="AND" name="fault_cfg_3" description="" probability="1.00e-06" page="Off">
+        <event name="E5" description="batt1.battery_failure.mode_is_rampdown" probability="1.00e-03"/>
+        <event name="E6" description="sensor2.sensor_failure.mode_is_deltaout" probability="1.00e-03"/>
+      </gate>
+      <gate type="AND" name="fault_cfg_2" description="" probability="1.00e-06" page="Off">
+        <event name="E4" description="batt2.battery_failure.mode_is_rampdown" probability="1.00e-03"/>
+        <event name="E7" description="sensor1.sensor_failure.mode_is_deltaout" probability="1.00e-03"/>
+      </gate>
+      <gate type="AND" name="fault_cfg_5" description="" probability="2.25e-12" page="Off">
+        <event name="E2" description="gen.generator_failure.mode_is_rampdown" probability="1.50e-06"/>
+        <event name="E1" description="spare_gen.generator_failure.mode_is_rampdown" probability="1.50e-06"/>
+      </gate>
+      <gate type="AND" name="fault_cfg_1" description="" probability="1.00e-06" page="Off">
+        <event name="E7" description="sensor1.sensor_failure.mode_is_deltaout" probability="1.00e-03"/>
+        <event name="E6" description="sensor2.sensor_failure.mode_is_deltaout" probability="1.00e-03"/>
+      </gate>
+    </gate>
+</fault-tree>

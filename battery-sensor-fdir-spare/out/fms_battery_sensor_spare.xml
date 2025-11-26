@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<compass>
+ <fmlist>
+<fm name="spare_gen.generator_failure.mode_is_rampdown" nominal_value="FALSE" probability="1.5e-6"></fm><fm name="gen.generator_failure.mode_is_rampdown" nominal_value="FALSE" probability="1.5e-6"></fm><fm name="spare_batt2.battery_failure.mode_is_rampdown" nominal_value="FALSE" probability="1.0e-3"></fm><fm name="spare_batt1.battery_failure.mode_is_rampdown" nominal_value="FALSE" probability="1.0e-3"></fm><fm name="batt2.battery_failure.mode_is_rampdown" nominal_value="FALSE" probability="1.0e-3"></fm><fm name="batt1.battery_failure.mode_is_rampdown" nominal_value="FALSE" probability="1.0e-3"></fm><fm name="spare_sensor2.sensor_failure.mode_is_deltaout" nominal_value="FALSE" probability="1.0e-3"></fm><fm name="spare_sensor1.sensor_failure.mode_is_deltaout" nominal_value="FALSE" probability="1.0e-3"></fm><fm name="sensor2.sensor_failure.mode_is_deltaout" nominal_value="FALSE" probability="1.0e-3"></fm><fm name="sensor1.sensor_failure.mode_is_deltaout" nominal_value="FALSE" probability="1.0e-3"></fm>
+ </fmlist>
+ <cclist>
+ </cclist>
+ <obslist>
+ </obslist>
+</compass>

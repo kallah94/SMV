@@ -1,0 +1,121 @@
+-----------------
+--- generator
+-----------------
+
+MODULE generator
+
+VAR
+    voltage_out : real;
+
+-- constant output 1.5, in nominla conditions
+ASSIGN
+    init(voltage_out) := 1.5;
+    next(voltage_out) := voltage_out;
+
+-----------------
+--- battery
+-----------------
+
+MODULE battery(voltage_in)
+
+VAR
+    voltage_out : real;
+
+-- Battery discharges , at rate 0.1, if input voltage goes to below 1.1
+-- otherwise it charge, at rate 0.1
+DEFINE
+    _CHARGING := voltage_in >= 1.1;
+
+ASSIGN
+    init(voltage_out) := 1.5;
+    next(voltage_out) := case
+        _CHARGING : case
+            voltage_out + 0.1 >= 1.5: 1.5;
+            TRUE: voltage_out + 0.1;
+        esac;
+        TRUE: case
+            voltage_out - 0.1 <= 0.0 : 0.0;
+            TRUE: voltage_out - 0.1;
+        esac;
+    esac;
+
+----------------
+--- sensor
+----------------
+
+MODULE sensor(voltage_in)
+
+VAR
+    reading : real;
+
+ASSIGN
+-- Initailly 40, increments or decrements randomly in the range 30..50
+-- In nominal conditions
+-- if input voltage goes below 0.95, then the output goes to 0
+    init(reading) := 40.0;
+    next(reading) := case
+        voltage_in >= 0.95:
+            {
+                case
+                    reading + 1 >= 50.0: 50.0;
+                    TRUE: reading + 1;
+                esac
+            ,
+                case
+                    reading - 1 <= 30.0: 30.0;
+                    TRUE: reading - 1;
+                esac
+            };
+        TRUE: 0;
+    esac;
+
+
+----------------
+--- Main -------
+----------------
+
+MODULE main
+
+VAR
+
+    gen: generator;
+    batt1: battery(gen.voltage_out);
+    batt2: battery(gen.voltage_out);
+    sensor1: sensor(batt1.voltage_out);
+    sensor2: sensor(batt2.voltage_out);
+
+    spare_gen: generator;
+    spare_batt1: battery(spare_gen.voltage_out);
+    spare_batt2: battery(spare_gen.voltage_out);
+    spare_sensor1: sensor(spare_batt1.voltage_out);
+    spare_sensor2: sensor(spare_batt2.voltage_out);
+    
+    reading_1 : real;
+    reading_2 : real;
+-- system failure if both sensors provide wrong readings
+
+DEFINE
+    _SENSOR1_WRONG := sensor1.reading < 30 | sensor1.reading > 50;
+    _SENSOR2_WRONG := sensor2.reading < 30 | sensor2.reading > 50;
+
+ASSIGN
+    init(reading_1) := sensor1.reading;
+    init(reading_2) := sensor2.reading;
+
+    next(reading_1) := case 
+        _SENSOR1_WRONG : spare_sensor1.reading;
+        TRUE: sensor1.reading;
+    esac;
+
+    next(reading_2) := case
+        _SENSOR2_WRONG : spare_sensor2.reading;
+        TRUE: sensor2.reading;
+    esac;
+
+DEFINE
+    _WRONG_READING_1 := reading_1 < 30 | reading_1 > 50;
+    _WRONG_READING_2 := reading_2 < 30 | reading_2 > 50;
+    _SYSTEM_FAILURE := _WRONG_READING_1 & _WRONG_READING_2;
+
+INVARSPEC NAME _SYSTEM_FAILURE_FTA := !_SYSTEM_FAILURE;
+

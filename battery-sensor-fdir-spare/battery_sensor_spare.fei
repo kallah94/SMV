@@ -1,0 +1,35 @@
+/-- Description of the whole fault extension
+--/
+FAULT EXTENSION FE_BATTERY_SENSOR_FDIR
+
+    EXTENSION OF MODULE generator
+
+        SLICE generator_failure AFFECTS voltage_out WITH
+
+            MODE rampdown {1.5e-6} : Permanent RampDown(
+                    data decr << 0.1,
+                    data end_value << 0.0,
+                    data input << voltage_out,
+                    data varout >> voltage_out,
+                    event failure);
+
+
+    EXTENSION OF MODULE battery
+        SLICE battery_failure AFFECTS voltage_out WITH
+
+            MODE rampdown {1.0e-3} : Permanent RampDown(
+                    data decr << 0.1,
+                    data end_value << 0.0,
+                    data input << voltage_out,
+                    data varout >> voltage_out,
+                    event failure);
+
+
+    EXTENSION OF MODULE sensor
+        SLICE sensor_failure AFFECTS reading WITH
+
+            MODE deltaout {1.0e-3} : Permanent DeltaOutByReference(
+                    data delta << 20.0,
+                    data input << reading,
+                    data varout >> reading,
+                    event failure);

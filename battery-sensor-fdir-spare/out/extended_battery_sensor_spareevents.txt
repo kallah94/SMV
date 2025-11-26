@@ -1,0 +1,11 @@
+Name	Symbol Type	Description	Failure Model Type	Failure Model Parameter 0
+E2	Basic	gen.generator_failure.mode_is_rampdown	Fixed	1,50e-06
+E1	Basic	spare_gen.generator_failure.mode_is_rampdown	Fixed	1,50e-06
+E6	Basic	batt1.battery_failure.mode_is_rampdown	Fixed	1,00e-03
+E5	Basic	batt2.battery_failure.mode_is_rampdown	Fixed	1,00e-03
+E9	Basic	sensor2.sensor_failure.mode_is_deltaout	Fixed	1,00e-03
+E10	Basic	sensor1.sensor_failure.mode_is_deltaout	Fixed	1,00e-03
+E4	Basic	spare_batt1.battery_failure.mode_is_rampdown	Fixed	1,00e-03
+E3	Basic	spare_batt2.battery_failure.mode_is_rampdown	Fixed	1,00e-03
+E7	Basic	spare_sensor2.sensor_failure.mode_is_deltaout	Fixed	1,00e-03
+E8	Basic	spare_sensor1.sensor_failure.mode_is_deltaout	Fixed	1,00e-03

@@ -1,0 +1,5 @@
+Ident. number	Entry ID	Failure Mode	Failure effects
+1	23-1	(batt1.battery_failure.mode_is_rampdown = TRUE & batt2.battery_failure.mode_is_rampdown = TRUE)	_SYSTEM_FAILURE
+2	25-1	(sensor1.sensor_failure.mode_is_deltaout = TRUE & batt2.battery_failure.mode_is_rampdown = TRUE)	_SYSTEM_FAILURE
+3	26-1	(sensor2.sensor_failure.mode_is_deltaout = TRUE & batt1.battery_failure.mode_is_rampdown = TRUE)	_SYSTEM_FAILURE
+4	28-1	(sensor1.sensor_failure.mode_is_deltaout = TRUE & sensor2.sensor_failure.mode_is_deltaout = TRUE)	_SYSTEM_FAILURE

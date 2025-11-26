@@ -1,0 +1,97 @@
+---------------------------------------------------------
+--- Definition of a new Architecture of the system
+----------------------------------------------------------
+
+--------------------
+---- generator
+--------------------
+
+MODULE generator
+
+VAR
+    voltage_out : real;
+-- constant output 1.5 in nominal conditions
+ASSIGN
+    init(voltage_out) := 1.5;
+    next(voltage_out) := voltage_out;
+
+--------------
+-- battery
+--------------
+MODULE battery(voltage_in)
+
+VAR
+    voltage_out : real;
+
+DEFINE
+    _CHARGING := voltage_in >= 1.1;
+
+ASSIGN
+    init(voltage_out) := 1.5;
+    next(voltage_out) := case
+        _CHARGING : case
+            voltage_out + 0.1 >= 1.5: 1.5;
+            TRUE: voltage_out + 0.1;
+        esac;
+        TRUE: case
+            voltage_out - 0.1 <= 0.0 : 0.0;
+            TRUE: voltage_out - 0.1;
+        esac;
+    esac;
+
+---------------
+--- sensor
+---------------
+
+MODULE sensor(voltage_in)
+
+VAR
+    reading : real;
+
+ASSIGN
+    init(reading) := 40.0;
+    next(reading) := case
+        voltage_in >= 0.95:
+            {
+                case
+                    reading + 1 >= 50.0 : 50.0;
+                    TRUE: reading + 1;
+                esac
+            ,
+                case
+                    reading - 1 <= 30.0: 30.0;
+                    TRUE: reading - 1;
+                esac
+            };
+        TRUE: 0.0;
+    esac;
+
+
+----------
+-- main
+----------
+
+MODULE main
+
+VAR
+    active_voltage : real;
+    gen: generator;
+    spare_gen: generator;
+    batt1: battery(active_voltage);
+    batt2: battery(active_voltage);
+    sensor1: sensor(batt1.voltage_out);
+    sensor2: sensor(batt2.voltage_out);
+    
+ASSIGN
+    init(active_voltage) := gen.voltage_out;
+    next(active_voltage) := case
+        gen.voltage_out < 0.95 : spare_gen.voltage_out;
+        TRUE: gen.voltage_out;
+    esac;
+
+DEFINE
+    _SENSOR1_WRONG := sensor1.reading < 30 | sensor1.reading > 50;
+    _SENSOR2_WRONG := sensor2.reading < 30 | sensor2.reading > 50;
+    _SYSTEM_FAILURE := _SENSOR1_WRONG & _SENSOR2_WRONG;
+
+INVARSPEC NAME _SYSTEM_FAILURE_FTA := !_SYSTEM_FAILURE;

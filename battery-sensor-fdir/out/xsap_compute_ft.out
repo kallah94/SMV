@@ -1,0 +1,85 @@
+
+----------------------------------------------------------------------
+Invoking: /home/devtool/FBK_Tools/xSAP-1.5.0/xSAP/bin/xSAP-linux64 -v 5 -sa_compass -sa_ft_layering -sa_compass_task out/fms_battery_sensor_fdir.xml -pre cpp -int
+
+----------------------------------------------------------------------
+*** This is xSAP 1.5.0 (compiled on Tue Oct 24 11:35:22 2023)
+*** Copyright (c) 2014, Fondazione Bruno Kessler
+
+*** For more information on xSAP see https://xsap.fbk.eu
+*** or email to <xsap@fbk.eu>.
+*** Please to report bugs access at https://xsap.fbk.eu/bugs
+*** Alternatively write to <xsap@fbk.eu>.
+
+*** This version of xSAP is linked to NuSMV 2.6.0.
+*** For more information on NuSMV see <http://nusmv.fbk.eu>
+*** or email to <nusmv-users@fbk.eu>.
+*** Copyright (C) 2010-2023, Fondazione Bruno Kessler
+
+*** This version of xSAP is linked to the CUDD library version 2.4.1
+*** Copyright (c) 1995-2004, Regents of the University of Colorado
+
+*** This version of xSAP is linked to the MiniSat SAT solver. 
+*** See http://minisat.se/MiniSat.html
+*** Copyright (c) 2003-2006, Niklas Een, Niklas Sorensson
+*** Copyright (c) 2007-2010, Niklas Sorensson
+
+*** This version of xSAP is linked to MathSAT
+*** Copyright (C) 2014 by Fondazione Bruno Kessler
+*** Copyright (C) 2014 by University of Trento
+*** See http://mathsat.fbk.eu
+
+xSAP > xSAP > xSAP > Dynamic variable ordering is enabled with method "sift".
+xSAP > xSAP > xSAP > xSAP > DONE_GO_MSAT 
+xSAP > 
+-- minimal cut sets for specification _SYSTEM_FAILURE
+
+***************  MINIMAL CUT SETS  *************
+
+at line 122 CASE has no explicit default condition
+at line 122 CASE has no explicit default condition
+at line 122 CASE has no explicit default condition
+at line 122 CASE has no explicit default condition
+Found 0 minimal cut sets of cardinality 0
+
+Found 0 minimal cut sets of cardinality 1
+
+1) -------------------------
+    _hist_var_7_sensor1_sensor_failure_mode_is_deltaout_TRUE = TRUE
+    _hist_var_6_sensor2_sensor_failure_mode_is_deltaout_TRUE = TRUE
+
+2) -------------------------
+    _hist_var_7_sensor1_sensor_failure_mode_is_deltaout_TRUE = TRUE
+    _hist_var_4_batt2_battery_failure_mode_is_rampdown_TRUE = TRUE
+
+3) -------------------------
+    _hist_var_6_sensor2_sensor_failure_mode_is_deltaout_TRUE = TRUE
+    _hist_var_5_batt1_battery_failure_mode_is_rampdown_TRUE = TRUE
+
+4) -------------------------
+    _hist_var_5_batt1_battery_failure_mode_is_rampdown_TRUE = TRUE
+    _hist_var_4_batt2_battery_failure_mode_is_rampdown_TRUE = TRUE
+
+5) -------------------------
+    _hist_var_2_gen_generator_failure_mode_is_rampdown_TRUE = TRUE
+    _hist_var_1_spare_gen_generator_failure_mode_is_rampdown_TRUE = TRUE
+
+
+Probability 4.00e-06 <= p <= 4.02e-06
+
+Found 5 minimal cut sets of cardinality 2
+
+***************  STATISTICS  *************
+
+    Order          Number           Cumul
+        0               0               0
+        1               0               0
+        2               5               5
+
+
+Probability = 4.00e-06
+
+Computing probability ... done!
+
+Probability = 4.00e-06
+xSAP > END OF COMPUTE_FAULT_TREE_PARAM 

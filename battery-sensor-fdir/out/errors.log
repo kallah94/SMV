@@ -1,0 +1,4 @@
+[ERROR battery_sensor_fdir.fei:18] Nominal Component 'interrupt' does not exists in the Nominal Model
+  Complete error traceback:
+  `- [battery_sensor_fdir.fei:3] fault extension 'FE_BATTERY_SENSOR_FDIR' of '(empty attribute <smv_file>)'
+

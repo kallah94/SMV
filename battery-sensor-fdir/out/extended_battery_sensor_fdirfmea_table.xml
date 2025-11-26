@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmea_table xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <row>
+  <id>1</id>
+  <entry>23-1</entry>
+  <failure_mode>(batt1.battery_failure.mode_is_rampdown = TRUE &amp; batt2.battery_failure.mode_is_rampdown = TRUE)</failure_mode>
+  <failure_effects>_SYSTEM_FAILURE</failure_effects>
+ </row>
+ <row>
+  <id>2</id>
+  <entry>25-1</entry>
+  <failure_mode>(sensor1.sensor_failure.mode_is_deltaout = TRUE &amp; batt2.battery_failure.mode_is_rampdown = TRUE)</failure_mode>
+  <failure_effects>_SYSTEM_FAILURE</failure_effects>
+ </row>
+ <row>
+  <id>3</id>
+  <entry>26-1</entry>
+  <failure_mode>(sensor2.sensor_failure.mode_is_deltaout = TRUE &amp; batt1.battery_failure.mode_is_rampdown = TRUE)</failure_mode>
+  <failure_effects>_SYSTEM_FAILURE</failure_effects>
+ </row>
+ <row>
+  <id>4</id>
+  <entry>28-1</entry>
+  <failure_mode>(sensor1.sensor_failure.mode_is_deltaout = TRUE &amp; sensor2.sensor_failure.mode_is_deltaout = TRUE)</failure_mode>
+  <failure_effects>_SYSTEM_FAILURE</failure_effects>
+ </row>
+</fmea_table>

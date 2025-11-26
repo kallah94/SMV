@@ -1,0 +1,226 @@
+<fault_extension name="FE_BATTERY_SENSOR_FDIR" smv_file="" fei_txt="battery_sensor_spare.fei" lineno="3">
+  <extensions>
+    <nominal_component_extensions module="generator" lineno="5">
+      <fault_models>
+        <fault_model name="generator_failure" lineno="7" symbols="voltage_out">
+          <instances/>
+          <fault_modes>
+            <fault_mode name="rampdown" probability="1.5e-6" lineno="9" symbols="voltage_out">
+              <effects_model name="RampDown" lineno="9">
+                <values>
+                  <input reads="decr" value="0.1"/>
+                  <input reads="end_value" value="0.0"/>
+                  <output writes="varout" reads="input" binds="voltage_out" type=""/>
+                </values>
+                <effect>
+                  <entering>------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- - Author: Roberto Cavada
+-- - Version: 0.1
+-- - Date: 2011/09/16
+------------------------------------------------------------------------------
+-- - varout: the output variable
+-- - value: the value stucked
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+next(varout) = input</entering>
+                  <during>------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- - Author: Roberto Cavada
+-- - Version: 0.1
+-- - Date: 2011/09/16
+------------------------------------------------------------------------------
+-- - varout: the output variable
+-- - ramp_mode: the mode of the failure
+-- - decr: the decresing value at each step
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+next(varout) = case
+	         ramp_mode = RAMPING_DOWN : varout - decr;
+		 ramp_mode = RAMPING_DONE : varout;
+	esac
+</during>
+                </effect>
+                <raw>      VAR ramp_mode : { RAMPING_DOWN, RAMPING_DONE };
+      ASSIGN
+      init(ramp_mode) := RAMPING_DOWN;
+      next(ramp_mode) := case
+      is_nominal: RAMPING_DOWN;
+      is_fault &amp; varout - decr &gt; end_value: RAMPING_DOWN;
+      TRUE: RAMPING_DONE;
+      esac;
+</raw>
+              </effects_model>
+              <local_dynamics_model name="Permanent" lineno="9">
+                <events>
+                  <event type="output" name="failure" connected="no" lineno="14"/>
+                </events>
+                <transitions>
+                  <transition from="nominal" to="fault" lineno="">
+                    <guard></guard>
+                    <trigger>failure</trigger>
+                  </transition>
+                  <transition from="fault" to="fault" lineno="">
+                    <guard></guard>
+                    <trigger></trigger>
+                  </transition>
+                </transitions>
+                <raw></raw>
+              </local_dynamics_model>
+            </fault_mode>
+          </fault_modes>
+          <global_dynamics_model lineno="">
+            <events/>
+            <transitions/>
+          </global_dynamics_model>
+        </fault_model>
+      </fault_models>
+    </nominal_component_extensions>
+    <nominal_component_extensions module="battery" lineno="17">
+      <fault_models>
+        <fault_model name="battery_failure" lineno="18" symbols="voltage_out">
+          <instances/>
+          <fault_modes>
+            <fault_mode name="rampdown" probability="1.0e-3" lineno="20" symbols="voltage_out">
+              <effects_model name="RampDown" lineno="20">
+                <values>
+                  <input reads="decr" value="0.1"/>
+                  <input reads="end_value" value="0.0"/>
+                  <output writes="varout" reads="input" binds="voltage_out" type=""/>
+                </values>
+                <effect>
+                  <entering>------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- - Author: Roberto Cavada
+-- - Version: 0.1
+-- - Date: 2011/09/16
+------------------------------------------------------------------------------
+-- - varout: the output variable
+-- - value: the value stucked
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+next(varout) = input</entering>
+                  <during>------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- - Author: Roberto Cavada
+-- - Version: 0.1
+-- - Date: 2011/09/16
+------------------------------------------------------------------------------
+-- - varout: the output variable
+-- - ramp_mode: the mode of the failure
+-- - decr: the decresing value at each step
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+next(varout) = case
+	         ramp_mode = RAMPING_DOWN : varout - decr;
+		 ramp_mode = RAMPING_DONE : varout;
+	esac
+</during>
+                </effect>
+                <raw>      VAR ramp_mode : { RAMPING_DOWN, RAMPING_DONE };
+      ASSIGN
+      init(ramp_mode) := RAMPING_DOWN;
+      next(ramp_mode) := case
+      is_nominal: RAMPING_DOWN;
+      is_fault &amp; varout - decr &gt; end_value: RAMPING_DOWN;
+      TRUE: RAMPING_DONE;
+      esac;
+</raw>
+              </effects_model>
+              <local_dynamics_model name="Permanent" lineno="20">
+                <events>
+                  <event type="output" name="failure" connected="no" lineno="25"/>
+                </events>
+                <transitions>
+                  <transition from="nominal" to="fault" lineno="">
+                    <guard></guard>
+                    <trigger>failure</trigger>
+                  </transition>
+                  <transition from="fault" to="fault" lineno="">
+                    <guard></guard>
+                    <trigger></trigger>
+                  </transition>
+                </transitions>
+                <raw></raw>
+              </local_dynamics_model>
+            </fault_mode>
+          </fault_modes>
+          <global_dynamics_model lineno="">
+            <events/>
+            <transitions/>
+          </global_dynamics_model>
+        </fault_model>
+      </fault_models>
+    </nominal_component_extensions>
+    <nominal_component_extensions module="sensor" lineno="28">
+      <fault_models>
+        <fault_model name="sensor_failure" lineno="29" symbols="reading">
+          <instances/>
+          <fault_modes>
+            <fault_mode name="deltaout" probability="1.0e-3" lineno="31" symbols="reading">
+              <effects_model name="DeltaOutByReference" lineno="31">
+                <values>
+                  <input reads="delta" value="20.0"/>
+                  <output writes="varout" reads="input" binds="reading" type=""/>
+                </values>
+                <effect>
+                  <entering>------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- - Author: Anthony Fernandes Pires
+-- - Version: 0.1
+-- - Date: 2015/12/02
+------------------------------------------------------------------------------
+-- - varout: the output variable
+-- - delta: the error delta
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+next(varout) &lt; (next(input) - delta) | next(varout) &gt; (next(input) + delta)
+</entering>
+                  <during>------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+-- - Author: Anthony Fernandes Pires
+-- - Version: 0.1
+-- - Date: 2015/12/02
+------------------------------------------------------------------------------
+-- - varout: the output variable
+-- - delta: the error delta
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+next(varout) &lt; (next(input) - delta) | next(varout) &gt; (next(input) + delta)
+</during>
+                </effect>
+                <raw></raw>
+              </effects_model>
+              <local_dynamics_model name="Permanent" lineno="31">
+                <events>
+                  <event type="output" name="failure" connected="no" lineno="35"/>
+                </events>
+                <transitions>
+                  <transition from="nominal" to="fault" lineno="">
+                    <guard></guard>
+                    <trigger>failure</trigger>
+                  </transition>
+                  <transition from="fault" to="fault" lineno="">
+                    <guard></guard>
+                    <trigger></trigger>
+                  </transition>
+                </transitions>
+                <raw></raw>
+              </local_dynamics_model>
+            </fault_mode>
+          </fault_modes>
+          <global_dynamics_model lineno="">
+            <events/>
+            <transitions/>
+          </global_dynamics_model>
+        </fault_model>
+      </fault_models>
+    </nominal_component_extensions>
+  </extensions>
+</fault_extension>

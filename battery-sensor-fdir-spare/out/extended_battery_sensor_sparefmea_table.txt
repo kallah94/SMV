@@ -1,0 +1,1 @@
+Ident. number	Entry ID	Failure Mode	Failure effects

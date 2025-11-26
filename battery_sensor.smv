@@ -1,0 +1,95 @@
+-----------------
+--- generator
+-----------------
+
+MODULE generator
+
+VAR
+    voltage_out : real;
+
+-- constant output 1.5, in nominla conditions
+ASSIGN
+    init(voltage_out) := 1.5;
+    next(voltage_out) := voltage_out;
+
+-----------------
+--- battery
+-----------------
+
+MODULE battery(voltage_in)
+
+VAR
+    voltage_out : real;
+
+-- Battery discharges , at rate 0.1, if input voltage goes to below 1.1
+-- otherwise it charge, at rate 0.1
+DEFINE
+    _CHARGING := voltage_in >= 1.1;
+
+ASSIGN
+    init(voltage_out) := 1.5;
+    next(voltage_out) := case
+        _CHARGING : case
+            voltage_out + 0.1 >= 1.5: 1.5;
+            TRUE: voltage_out + 0.1;
+        esac;
+        TRUE: case
+            voltage_out - 0.1 <= 0.0 : 0.0;
+            TRUE: voltage_out - 0.1;
+        esac;
+    esac;
+
+----------------
+--- sensor
+----------------
+
+MODULE sensor(voltage_in)
+
+VAR
+    reading : real;
+
+ASSIGN
+-- Initailly 40, increments or decrements randomly in the range 30..50
+-- In nominal conditions
+-- if input voltage goes below 0.95, then the output goes to 0
+    init(reading) := 40.0;
+    next(reading) := case
+        voltage_in >= 0.95:
+            {
+                case
+                    reading + 1 >= 50.0: 50.0;
+                    TRUE: reading + 1;
+                esac
+            ,
+                case
+                    reading - 1 <= 30.0: 30.0;
+                    TRUE: reading - 1;
+                esac
+            };
+        TRUE: 0;
+    esac;
+
+
+----------------
+--- Main -------
+----------------
+
+MODULE main
+
+VAR
+    gen: generator;
+    batt1: battery(gen.voltage_out);
+    batt2: battery(gen.voltage_out);
+    sensor1: sensor(batt1.voltage_out);
+    sensor2: sensor(batt2.voltage_out);
+
+-- system failure if both sensors provide wrong readings
+
+DEFINE
+    _SENSOR1_WRONG := sensor1.reading < 30 | sensor1.reading > 50;
+    _SENSOR2_WRONG := sensor2.reading < 30 | sensor2.reading > 50;
+    _SYSTEM_FAILURE := _SENSOR1_WRONG & _SENSOR2_WRONG;
+
+
+INVARSPEC NAME _SYSTEM_FAILURE_FTA := !_SYSTEM_FAILURE;
+
