@@ -1,0 +1,13 @@
+@startuml Nominal Sensor State Machine
+   skinparam BackgroundColor LightYellow
+    [*] --> InitialState
+    InitialState --> CorrectReading : 30.0<=reading<=50.0
+    CorrectReading --> CorrectReading: 30.0<= reading <= 50.0
+    WrongReading --> CorrectReading: 30.0<= reading <= 50.0
+    WrongReading --> WrongReading: 30.0> reading | reading>50.0
+    CorrectReading --> WrongReading: 30.0> reading | reading>50.0
+
+    state InitialState: Sensor\nreading = 40.0
+    state CorrectReading: value in bounds
+    state WrongReading: value out of bounds
+@enduml

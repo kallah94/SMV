@@ -1,0 +1,14 @@
+@startuml Battery State Machine
+    skinparam BackgroundColor LightYellow
+    title Battery Nominal State Machine
+    [*] --> InitialState
+    InitialState --> Charging: voltage_in .=1.1
+    Charging --> Charging: voltage_in >= 1.1
+    Charging --> Discharging: voltage_in <1.1
+    Discharging --> Charging: voltage_in >=1.1
+    Discharging --> Discharging: voltage_in < 1.1
+    
+    state Charging: Battery is charging
+    state Discharging: Battery is discharging
+    state InitialState: Battery:\n voltage_in = 1.5
+@enduml
