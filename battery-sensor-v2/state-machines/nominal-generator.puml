@@ -1,14 +1,12 @@
 @startuml Nominal Generator State Machine
-    skinparam BackgroundColor LightYellow
     title Nominal Generator State Machine
-    [*] --> InitialState
-    InitialState --> High_Voltage: voltage_out >=1.1
-    High_Voltage --> Low_Voltage: voltage_out < 1.1
-    High_Voltage --> High_Voltage: voltage_out >= 1.1
-    Low_Voltage --> High_Voltage: voltage_out >= 1.1
-    Low_Voltage --> Low_Voltage: voltage_out < 1.1
-
-    InitialState: Generator:\n voltage_out = 1.5
-    High_Voltage: Generator:\noutput_voltage >= 1.1
-    Low_Voltage: Generator:\n voltage_out < 1.1
+    [*] --> initial
+    initial --> working
+    working --> working :voltage_out:=voltage_out
+   
+    working --> failed : voltage_out:= voltage_out - decr
+    failed --> failed : voltage_out:= voltage_out - decr
+    initial:
+    working:
+    
 @endstartuml

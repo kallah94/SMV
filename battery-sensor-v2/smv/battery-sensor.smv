@@ -1,0 +1,113 @@
+-----------------------------
+---- Module Generator -------
+-----------------------------
+
+MODULE generator
+
+    IVAR
+        failure_event_gen: boolean;
+    VAR
+        voltage_out : real;
+        state: {initial, working, failed};
+
+    ASSIGN
+        init(voltage_out) := 1.5;
+        next(voltage_out) := voltage_out;
+        
+        init(state) := initial;
+        next(state) := case
+            failure_event_gen : failed;
+            (state = initial) : working;
+            TRUE: state;
+        esac;
+
+
+
+----------------------------------
+------- Module Battery
+----------------------------------
+
+MODULE battery(voltage_in)
+    IVAR
+        failure_event_batt : boolean;
+    
+    VAR
+        voltage_out : real;
+        state: {initial, charging, discharging, failed};
+
+    DEFINE
+        _CHARGING := voltage_in >= 1.1;
+    ASSIGN
+        init(voltage_out) := 1.5;
+        next(voltage_out) := case
+            _CHARGING : min(voltage_out + 0.1, 1.5);
+            TRUE: max(voltage_out - 0.1, 0.0);
+        esac;
+
+        init(state) := initial;
+        next(state) := case
+            failure_event_batt : failed;
+            (state = failed) : failed; --Permanent error
+            (state = initial) : charging;
+            (state = charging) & _CHARGING : charging;
+            (state = discharging) & _CHARGING : charging;
+            (state = charging) & !_CHARGING : discharging;
+            (state = discharging) & !_CHARGING : discharging;
+            TRUE: state;
+        esac;
+
+
+--------------------------------
+--- Module sensor --------------
+--------------------------------
+
+MODULE sensor(voltage_in)
+    IVAR
+        sensor_failure_event : boolean;
+    
+    VAR
+        reading : real;
+        state : {initial, working, failed};
+
+    DEFINE
+        _HVOLTAGE := voltage_in >= 0.95;
+        _READING_INBOUD := 30.0 <= reading & reading <= 50.0;
+    ASSIGN
+        init(reading) := 40.0;
+        next(reading) := case
+            _HVOLTAGE : { min(reading + 1, 50.0), max(reading -1, 30.0)};
+            TRUE : 0.0;
+        esac;
+
+        init(state) := initial;
+        next(state) := case
+            sensor_failure_event : failed;
+            (state = failed) : failed; -- Permanent error
+            (state = initial) : working;
+            (state = working) & (_READING_INBOUD) : working;
+            TRUE: state;
+        esac;
+--------------------------------
+----- Module Main --------------
+--------------------------------
+
+MODULE main
+    VAR
+        gen: generator;
+        batt1: battery(gen.voltage_out);
+        batt2: battery(gen.voltage_out);
+        sen1: sensor(batt1.voltage_out);
+        sen2: sensor(batt2.voltage_out);
+    DEFINE
+        _GENERATOR_FAILURE := (gen.state = failed);
+        _BATTERY_FAILURE := ((batt1.state = failed) & (batt2.state = failed));
+        _SENSOR_FAILURE := (sen1.state = failed) & (sen2.state = failed);
+        _SENSOR1_WRONG := (sen1.reading < 30 | sen1.reading > 50);
+        _SENSOR2_WRONG := (sen2.reading < 30 | sen2.reading > 50);
+        _WRONG_READING := _SENSOR1_WRONG & _SENSOR2_WRONG;
+
+
+    INVARSPEC NAME _GENERATOR_FAILURE_FTA := !_GENERATOR_FAILURE;
+    INVARSPEC NAME _BATTERY_FAILURE_FTA := !_BATTERY_FAILURE;
+    INVARSPEC NAME _SENSOR_FAILURE_FTA := !_SENSOR_FAILURE;
+    INVARSPEC NAME _WRONG_READING_FTA := !_WRONG_READING;

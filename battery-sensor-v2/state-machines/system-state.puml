@@ -1,0 +1,9 @@
+@startuml
+    title System State Machine
+    [*] -> initial : reading1 :=40.0 & reading2 := 40.0
+    initial --> working
+    working --> working : cread1 | cread2
+    working --> failed : wread1 & wread2
+    failed -> failed : wread1 & wread2
+
+@enduml

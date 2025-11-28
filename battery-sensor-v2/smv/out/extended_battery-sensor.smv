@@ -1,0 +1,331 @@
+
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE main
+    VAR
+        gen : generator_#Extended;
+        batt1 : battery_#Extended(gen.voltage_out);
+        batt2 : battery_#Extended(gen.voltage_out);
+        sen1 : sensor_#Extended(batt1.voltage_out);
+        sen2 : sensor_#Extended(batt2.voltage_out);
+        _masterCC : MasterCC#;
+    VAR
+        mode : {initial, working, nok};
+
+    DEFINE
+        _WRONG_READING := (_SENSOR1_WRONG & _SENSOR2_WRONG);
+        _SENSOR2_WRONG := (sen2.reading < 30 | sen2.reading > 50);
+        _SENSOR1_WRONG := (sen1.reading < 30 | sen1.reading > 50);
+        _SENSOR_FAILURE := (sen1.state = failed & sen2.state = failed);
+        _BATTERY_FAILURE := (batt1.state = failed & batt2.state = failed);
+        _GENERATOR_FAILURE := gen.state = failed;
+
+    ASSIGN
+        init(mode) := initial;
+        next(mode) := case
+_WRONG_READING : nok;
+!_WRONG_READING : working;
+TRUE : mode;
+esac;
+
+    INVARSPEC NAME _GENERATOR_FAILURE_FTA := !_GENERATOR_FAILURE;
+
+    INVARSPEC NAME _BATTERY_FAILURE_FTA := !_BATTERY_FAILURE;
+
+    INVARSPEC NAME _SENSOR_FAILURE_FTA := !_SENSOR_FAILURE;
+
+    INVARSPEC NAME _WRONG_READING_FTA := !_WRONG_READING;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE generator_#Extended
+    VAR
+        generator_failure : generator_failure_FM_Mod(voltage_out_#nominal, 0.1, 0.0, failure_event_gen);
+    VAR
+        voltage_out_#nominal : real;
+        state : {initial, working, failed};
+
+    IVAR
+        failure_event_gen : boolean;
+
+    DEFINE
+        voltage_out := generator_failure.voltage_out_#fault;
+
+    ASSIGN
+        init(voltage_out_#nominal) := 1.5;
+        init(state) := initial;
+        next(voltage_out_#nominal) := voltage_out;
+
+        next(state) := case
+failure_event_gen : failed;
+state = initial : working;
+TRUE : state;
+esac;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE generator_failure_FM_Mod(voltage_out__#read, decr_#1, end_value_#2, failure_event_gen#event)
+    VAR
+        rampdown : rampdown_fm_Mod(mode = NOMINAL, mode_is_rampdown, decr_#1, end_value_#2, voltage_out__#read, voltage_out__#write, event = rampdown#failure, event = _#NoEvent);
+    VAR
+        mode : {NOMINAL, rampdown#FAULT};
+        voltage_out__#write : real;
+
+    IVAR
+        event : {_#NoEvent, rampdown#failure};
+
+    DEFINE
+        NoEvent := event = _#NoEvent;
+        cando_rampdown#FAULT := ((mode = NOMINAL & rampdown.trans_trig_guard_#0) | (mode = rampdown#FAULT & rampdown.trans_trig_guard_#1));
+        voltage_out_#fault := case
+mode = NOMINAL : voltage_out__#read;
+mode_is_rampdown : voltage_out__#write;
+TRUE : voltage_out__#read;
+esac;
+        mode_is_rampdown := mode = rampdown#FAULT;
+
+    INIT mode = NOMINAL;
+
+    TRANS (event in rampdown#failure <-> failure_event_gen#event);
+
+    TRANS case
+((mode = rampdown#FAULT & rampdown.trans_trig_guard_#1) | (mode = NOMINAL & rampdown.trans_trig_guard_#0)) : next(mode) = rampdown#FAULT;
+TRUE : (next(mode) = mode & NoEvent);
+esac;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE rampdown_fm_Mod(is_nominal, is_fault, decr, end_value, input, varout, _failure, ev_#NoEvent)
+    VAR
+        rampdownEM : rampdown_fm_EM_Mod(is_nominal, is_fault, decr, end_value, input, varout);
+    DEFINE
+        failure := _failure;
+        NoEvent := ev_#NoEvent;
+        trans_trig_guard_#0 := failure;
+        trans_trig_guard_#1 := NoEvent;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE rampdown_fm_EM_Mod(is_nominal, is_fault, decr, end_value, input, varout)
+    VAR
+        ramp_mode : {RAMPING_DOWN, RAMPING_DONE};
+
+    ASSIGN
+        init(ramp_mode) := RAMPING_DOWN;
+        next(ramp_mode) := case
+is_nominal : RAMPING_DOWN;
+(is_fault & varout - decr > end_value) : RAMPING_DOWN;
+TRUE : RAMPING_DONE;
+esac;
+
+    TRANS (!(!is_fault & next(is_fault)) | next(varout) = input);
+
+    TRANS (!(is_fault & next(is_fault)) | next(varout) = case
+ramp_mode = RAMPING_DOWN : varout - decr;
+ramp_mode = RAMPING_DONE : varout;
+esac);
+
+    TRANS (!(is_nominal & next(is_nominal)) | next(varout) = varout);
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE battery_#Extended(voltage_in)
+    VAR
+        battery_failure : battery_failure_FM_Mod(voltage_out_#nominal, 0.1, 0.0, failure_event_batt);
+    VAR
+        voltage_out_#nominal : real;
+        state : {initial, charging, discharging, failed};
+
+    IVAR
+        failure_event_batt : boolean;
+
+    DEFINE
+        _CHARGING := voltage_in >= 1.1;
+        voltage_out := battery_failure.voltage_out_#fault;
+
+    ASSIGN
+        init(voltage_out_#nominal) := 1.5;
+        init(state) := initial;
+        next(voltage_out_#nominal) := case
+_CHARGING :  (voltage_out + 0.1 < 1.5 ? voltage_out + 0.1 : 1.5) ;
+TRUE :  (voltage_out - 0.1 < 0.0 ? 0.0 : voltage_out - 0.1) ;
+esac;
+
+        next(state) := case
+failure_event_batt : failed;
+state = failed : failed;
+state = initial : charging;
+(state = charging & _CHARGING) : charging;
+(state = discharging & _CHARGING) : charging;
+(state = charging & !_CHARGING) : discharging;
+(state = discharging & !_CHARGING) : discharging;
+TRUE : state;
+esac;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE battery_failure_FM_Mod(voltage_out__#read, decr_#1, end_value_#2, failure_event_batt#event)
+    VAR
+        rampdown : rampdown_fm_Mod(mode = NOMINAL, mode_is_rampdown, decr_#1, end_value_#2, voltage_out__#read, voltage_out__#write, event = rampdown#failure, event = _#NoEvent);
+    VAR
+        mode : {NOMINAL, rampdown#FAULT};
+        voltage_out__#write : real;
+
+    IVAR
+        event : {_#NoEvent, rampdown#failure};
+
+    DEFINE
+        NoEvent := event = _#NoEvent;
+        cando_rampdown#FAULT := ((mode = NOMINAL & rampdown.trans_trig_guard_#0) | (mode = rampdown#FAULT & rampdown.trans_trig_guard_#1));
+        voltage_out_#fault := case
+mode = NOMINAL : voltage_out__#read;
+mode_is_rampdown : voltage_out__#write;
+TRUE : voltage_out__#read;
+esac;
+        mode_is_rampdown := mode = rampdown#FAULT;
+
+    INIT mode = NOMINAL;
+
+    TRANS (event in rampdown#failure <-> failure_event_batt#event);
+
+    TRANS case
+((mode = rampdown#FAULT & rampdown.trans_trig_guard_#1) | (mode = NOMINAL & rampdown.trans_trig_guard_#0)) : next(mode) = rampdown#FAULT;
+TRUE : (next(mode) = mode & NoEvent);
+esac;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE sensor_#Extended(voltage_in)
+    VAR
+        sensor_failure : sensor_failure_FM_Mod(reading_#nominal, 20.0, sensor_failure_event);
+    VAR
+        reading_#nominal : real;
+        state : {initial, working, failed};
+
+    IVAR
+        sensor_failure_event : boolean;
+
+    DEFINE
+        _READING_INBOUD := (30.0 <= reading & reading <= 50.0);
+        _HVOLTAGE := voltage_in >= 0.95;
+        reading := sensor_failure.reading_#fault;
+
+    ASSIGN
+        init(reading_#nominal) := 40.0;
+        init(state) := initial;
+        next(reading_#nominal) := case
+_HVOLTAGE :  (reading + 1 < 50.0 ? reading + 1 : 50.0)  union  (reading - 1 < 30.0 ? 30.0 : reading - 1) ;
+TRUE : 0.0;
+esac;
+
+        next(state) := case
+sensor_failure_event : failed;
+state = failed : failed;
+state = initial : working;
+(state = working & _READING_INBOUD) : working;
+TRUE : state;
+esac;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE sensor_failure_FM_Mod(reading__#read, delta_#1, sensor_failure_event#event)
+    VAR
+        deltaout : deltaout_fm_Mod(mode = NOMINAL, mode_is_deltaout, delta_#1, reading__#read, reading__#write, event = deltaout#failure, event = _#NoEvent);
+    VAR
+        mode : {NOMINAL, deltaout#FAULT};
+        reading__#write : real;
+
+    IVAR
+        event : {_#NoEvent, deltaout#failure};
+
+    DEFINE
+        NoEvent := event = _#NoEvent;
+        cando_deltaout#FAULT := ((mode = NOMINAL & deltaout.trans_trig_guard_#0) | (mode = deltaout#FAULT & deltaout.trans_trig_guard_#1));
+        reading_#fault := case
+mode = NOMINAL : reading__#read;
+mode_is_deltaout : reading__#write;
+TRUE : reading__#read;
+esac;
+        mode_is_deltaout := mode = deltaout#FAULT;
+
+    INIT mode = NOMINAL;
+
+    TRANS (event in deltaout#failure <-> sensor_failure_event#event);
+
+    TRANS case
+((mode = deltaout#FAULT & deltaout.trans_trig_guard_#1) | (mode = NOMINAL & deltaout.trans_trig_guard_#0)) : next(mode) = deltaout#FAULT;
+TRUE : (next(mode) = mode & NoEvent);
+esac;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE deltaout_fm_Mod(is_nominal, is_fault, delta, input, varout, _failure, ev_#NoEvent)
+    VAR
+        deltaoutEM : deltaout_fm_EM_Mod(is_nominal, is_fault, delta, input, varout);
+    DEFINE
+        failure := _failure;
+        NoEvent := ev_#NoEvent;
+        trans_trig_guard_#0 := failure;
+        trans_trig_guard_#1 := NoEvent;
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE deltaout_fm_EM_Mod(is_nominal, is_fault, delta, input, varout)
+    TRANS (!(!is_fault & next(is_fault)) | (next(varout) < next(input) - delta | next(varout) > next(input) + delta));
+
+    TRANS (!(is_fault & next(is_fault)) | (next(varout) < next(input) - delta | next(varout) > next(input) + delta));
+
+    TRANS (!(is_nominal & next(is_nominal)) | next(varout) = varout);
+
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================
+
+-- ===============================================================================
+MODULE MasterCC#
+
+-- ===============================================================================
+--                               End of module
+-- ===============================================================================

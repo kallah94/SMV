@@ -1,0 +1,5 @@
+@startuml State Machine Delta Error
+    title State Machine Delta Error
+    [*] --> delta_state
+    delta_state --> delta_state
+@enduml

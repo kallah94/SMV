@@ -1,0 +1,6 @@
+@startuml RampDown State Machine
+title RampDown Error Machine
+    [*] --> ramp_down
+    ramp_down --> ramp_down : value := value - decr
+    ramp_down --> end_value: value :=0
+@enduml

@@ -1,0 +1,129 @@
+--- Battery sensor system v2---
+--- @Author: Moussa FALL ---
+---fmoussa@fbk.eu ---
+
+----------------------------------------------
+---- DEFINITION GENERATOR MODULE -------------
+----------------------------------------------
+
+MODULE generator
+    IVAR
+        ramp_down_error: boolean;
+    VAR
+    --- intial: Entry point of the generator simulation with voltage_out = 1.5 ---
+    --- working: State that the generator provide an voltage_out ---
+        state : {initial, working, failed};
+    --- voltage_out: the voltage the generator produices ---
+        voltage_out: real;
+    
+    DEFINE
+        _VHIGH := voltage_out >= 1.1;
+        _VLOW := voltage_out < 1.1;
+
+    ASSIGN
+        init(voltage_out) := 1.5;
+        next(voltage_out) := voltage_out;
+        init(state) := initial;
+        next(state) := case
+            ramp_down_error : failed;
+            TRUE : working;
+        esac;
+
+----------------------------------------------
+---- DEFINITION BATTERY MODULE ---------------
+----------------------------------------------
+
+MODULE battery(voltage_in)
+
+    IVAR
+        ramp_down: boolean;
+    VAR
+    --- initial: Entry point of the generator simulation with voltage_out = 1.5 ---
+    --- charging: State that the batteries are when voltage_in >= 1.1 ---
+    --- discharging: State that the batteries are when voltage_in < 1.1 ---
+        state : {initial, charging, discharging, failed};
+    --- voltage_out: the voltage that the batteries produices ---
+        voltage_out : real;
+
+    DEFINE
+        _INITIAL := state = initial;
+        _CHARGING := state = charging;
+        _DISCHARGING := state = discharging;
+        _IVLOW := voltage_in < 1.1;
+        _IVHIGH := voltage_in >= 1.1;
+
+    ASSIGN
+        init(state) := initial;
+        next(state) := case
+            _INITIAL : charging;
+            _CHARGING & _IVHIGH : charging;
+            _DISCHARGING & _IVHIGH : charging;
+            _DISCHARGING & _IVLOW : discharging;
+            _CHARGING & _IVLOW : discharging;
+            ramp_down : failed;
+            TRUE: state;
+        esac;
+
+        init(voltage_out) := 1.5;
+        next(voltage_out) := case
+            _CHARGING : min(voltage_out + 0.1, 1.5);
+            TRUE : max(voltage_out - 0.1, 0);
+        esac;
+
+----------------------------------------------
+---- DEFINITION SENSOR MODULE ----------------
+----------------------------------------------
+
+MODULE sensor(voltage_in)
+    VAR
+        state : {initial, working, failed};
+        reading : real;
+
+    DEFINE
+        _THRESHOLD := voltage_in >= 0.95;
+        _CREADING := (30.0 <= reading & reading <= 50.0);
+    ASSIGN
+        init(state) := initial;
+        next(state) := case
+            _CREADING : working;
+            TRUE: failed;
+        esac;
+
+        init(reading) := 40.0;
+        next(reading) := case
+            _THRESHOLD : {min(reading + 1, 50.0), max(reading - 1, 30.0)};
+            TRUE: 0.0;
+        esac;
+
+----------------------------------------------
+---- DEFINITION MAIN MODULE ----------------
+----------------------------------------------
+
+MODULE main
+    VAR
+    -- ok: One of the sensors provide a valide reading --
+    -- nok: Both sensors provide wrong reading --
+        state : {ok, nok};
+        gen: generator;
+        battery_1: battery(gen.voltage_out);
+        battery_2: battery(gen.voltage_out);
+        sensor1: sensor(battery_1.voltage_out);
+        sensor2: sensor(battery_2.voltage_out);
+    
+    DEFINE
+        _SENSOR1_WRONG := sensor1.reading < 30 | sensor1.reading > 50;
+        _SENSOR2_WRONG := sensor2.reading < 30 | sensor2.reading > 50;
+        _SYSTEM_FAILURE := _SENSOR1_WRONG & _SENSOR2_WRONG;
+
+    ASSIGN
+        init(state) := ok;
+        next(state) := case
+            (_SENSOR1_WRONG & _SENSOR1_WRONG) : nok;
+            !(_SENSOR1_WRONG & _SENSOR1_WRONG) : nok;
+            TRUE: state;
+        esac;
+
+INVARSPEC NAME _SYSTEM_FAILURE_FTA := !_SYSTEM_FAILURE;
+
+
+

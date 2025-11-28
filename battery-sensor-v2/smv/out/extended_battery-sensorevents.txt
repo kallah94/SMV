@@ -1,0 +1,5 @@
+Name	Symbol Type	Description	Failure Model Type	Failure Model Parameter 0
+E3	Basic	batt1.battery_failure.mode_is_rampdown	Fixed	1,00e-01
+E2	Basic	batt2.battery_failure.mode_is_rampdown	Fixed	1,00e-01
+E4	Basic	sen2.sensor_failure.mode_is_deltaout	Fixed	1,00e-03
+E5	Basic	sen1.sensor_failure.mode_is_deltaout	Fixed	1,00e-03
